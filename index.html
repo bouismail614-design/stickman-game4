@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Stickman Game</title>
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:#111;
+    font-family:Arial;
+    color:white;
+}
+
+/* معلومات */
+.ui{
+    position:fixed;
+    top:10px;
+    left:10px;
+    font-size:18px;
+}
+
+/* زر المتجر */
+#shopBtn{
+    position:fixed;
+    top:10px;
+    right:10px;
+    padding:10px 15px;
+    background:#00c853;
+    border:none;
+    color:white;
+    border-radius:8px;
+}
+
+/* نافذة المتجر */
+#shop{
+    display:none;
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:#222;
+    padding:20px;
+    border-radius:12px;
+}
+
+/* أزرار التحكم */
+.btn{
+    position:fixed;
+    bottom:80px;
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:#333;
+    color:white;
+    font-size:22px;
+}
+
+#left{left:20px}
+#right{left:100px}
+#attack{right:20px}
+</style>
+</head>
+
+<body>
+
+<div class="ui">
+❤️ HP: <span id="hp">100</span><br>
+⭐ Score: <span id="score">0</span><br>
+🪙 Coins: <span id="coins">0</span>
+</div>
+
+<button id="shopBtn">🛒 Shop</button>
+
+<div id="shop">
+<h3>المتجر</h3>
+<button onclick="buyDamage()">⚔ زيادة قوة (50)</button><br><br>
+<button onclick="buyCoins()">💎 شحن 100 عملة (تجربة)</button><br><br>
+<button onclick="closeShop()">إغلاق</button>
+</div>
+
+<canvas id="game"></canvas>
+
+<button id="left" class="btn">◀</button>
+<button id="right" class="btn">▶</button>
+<button id="attack" class="btn">⚔</button>
+
+<script>
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+
+let player={x:100,y:400,w:40,h:60,vx:0,hp:100};
+let score=0;
+let coins=0;
+let damage=2;
+
+let keys={};
+
+function bind(id,key){
+document.getElementById(id).ontouchstart=()=>keys[key]=true;
+document.getElementById(id).ontouchend=()=>keys[key]=false;
+}
+
+bind("left","l");
+bind("right","r");
+bind("attack","a");
+
+let enemies=[];
+
+function spawn(){
+enemies.push({x:canvas.width,y:400,w:40,h:60,hp:10});
+}
+setInterval(spawn,1500);
+
+function hit(a,b){
+return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y;
+}
+
+function update(){
+
+if(keys.l) player.x-=5;
+if(keys.r) player.x+=5;
+
+enemies.forEach(e=>{
+e.x-=2;
+
+if(keys.a && hit(player,e)){
+e.hp-=damage;
+}
+
+if(hit(player,e)){
+player.hp-=0.2;
+}
+});
+
+enemies=enemies.filter(e=>{
+if(e.hp<=0){
+score+=10;
+coins+=5;
+return false;
+}
+return true;
+});
+
+document.getElementById("hp").innerText=Math.floor(player.hp);
+document.getElementById("score").innerText=score;
+document.getElementById("coins").innerText=coins;
+}
+
+function draw(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="cyan";
+ctx.fillRect(player.x,player.y,player.w,player.h);
+
+ctx.fillStyle="red";
+enemies.forEach(e=>ctx.fillRect(e.x,e.y,e.w,e.h));
+}
+
+function loop(){
+update();
+draw();
+requestAnimationFrame(loop);
+}
+loop();
+
+/* المتجر */
+document.getElementById("shopBtn").onclick=()=>{
+document.getElementById("shop").style.display="block";
+}
+
+function closeShop(){
+document.getElementById("shop").style.display="none";
+}
+
+function buyDamage(){
+if(coins>=50){
+coins-=50;
+damage+=2;
+alert("تمت زيادة القوة!");
+}
+}
+
+function buyCoins(){
+coins+=100;
+alert("تم الشحن (تجربة فقط)");
+}
+</script>
+
+</body>
+</html>
